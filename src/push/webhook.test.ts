@@ -81,6 +81,6 @@ describe('Webhook', () => {
         })
         await webhook.send('标题', '内容')
         const [config] = mockedAjax.mock.calls[0]
-        expect(config.data).toBe('标题  ')
+        expect((config.data as Buffer).toString('utf-8')).toBe('标题  ')
     })
 })
