@@ -1,4 +1,6 @@
 export * from './push/custom-email'
+export * from './push/bark'
+export * from './push/webhook'
 export * from './push/dingtalk'
 export * from './push/discord'
 export * from './push/feishu'
