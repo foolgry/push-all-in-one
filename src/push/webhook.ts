@@ -228,11 +228,15 @@ export class Webhook implements Send {
         if (isPost && !Object.keys(headers).some((k) => k.toLowerCase() === 'content-type')) {
             headers['Content-Type'] = 'application/json; charset=utf-8'
         }
+        // 模板渲染结果即最终请求体。必须用 Buffer 传给 axios：
+        // string + application/json 会触发 axios 的 transformRequest 二次 JSON.stringify，
+        // 导致用户模板被序列化成 JSON 字面量；Buffer 分支在 json 分支之前 return，原样透传。
+        const data = isPost ? Buffer.from(this.renderTemplate(this.WEBHOOK_BODY_TEMPLATE, title, desp, option), 'utf-8') : undefined
         return ajax({
             url: this.WEBHOOK_URL,
             method: this.WEBHOOK_METHOD,
             headers,
-            data: isPost ? this.renderTemplate(this.WEBHOOK_BODY_TEMPLATE, title, desp, option) : undefined,
+            data,
         })
     }
 

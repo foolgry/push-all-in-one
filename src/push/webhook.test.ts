@@ -29,7 +29,9 @@ describe('Webhook', () => {
         expect(config.headers).toEqual({
             'Content-Type': 'application/json; charset=utf-8',
         })
-        expect(config.data).toBe('标题\n内容')
+        // Buffer 透传给 axios，避免 string + application/json 被二次 JSON.stringify
+        expect(Buffer.isBuffer(config.data)).toBe(true)
+        expect((config.data as Buffer).toString('utf-8')).toBe('标题\n内容')
     })
 
     it('should replace all placeholders and keep custom headers', async () => {
@@ -45,7 +47,7 @@ describe('Webhook', () => {
             Authorization: 'Bearer xxx',
             'Content-Type': 'application/json; charset=utf-8',
         })
-        expect(config.data).toBe('{"msg": "标题|内容|https://example.com/t/1|换滤芯"}')
+        expect((config.data as Buffer).toString('utf-8')).toBe('{"msg": "标题|内容|https://example.com/t/1|换滤芯"}')
     })
 
     it('should not override provided content-type', async () => {
