@@ -206,11 +206,12 @@ export class Webhook implements Send {
      * @param option 额外选项
      */
     private renderTemplate(template: string, title: string, desp: string, option?: WebhookOption): string {
+        // 替换值必须以函数形式传入：字符串形式的替换串中 $&、$`、$'、$< 等会被当作特殊序列展开，损坏 payload
         const replace = (str: string): string => str
-            .replaceAll('{{title}}', title)
-            .replaceAll('{{body}}', desp)
-            .replaceAll('{{url}}', option?.url ?? '')
-            .replaceAll('{{task}}', option?.task ?? '')
+            .replaceAll('{{title}}', () => title)
+            .replaceAll('{{body}}', () => desp)
+            .replaceAll('{{url}}', () => option?.url ?? '')
+            .replaceAll('{{task}}', () => option?.task ?? '')
         return replace(template)
     }
 
@@ -226,12 +227,15 @@ export class Webhook implements Send {
         const headers = { ...this.WEBHOOK_HEADERS }
         const isPost = this.WEBHOOK_METHOD === 'POST'
         if (isPost && !Object.keys(headers).some((k) => k.toLowerCase() === 'content-type')) {
-            headers['Content-Type'] = 'application/json; charset=utf-8'
+            // 默认模板 "{{title}}\n{{body}}" 为纯文本，默认 Content-Type 需与之匹配；用户显式配置时尊重用户值
+            headers['Content-Type'] = 'text/plain; charset=utf-8'
         }
         // 模板渲染结果即最终请求体。必须用 Buffer 传给 axios：
         // string + application/json 会触发 axios 的 transformRequest 二次 JSON.stringify，
         // 导致用户模板被序列化成 JSON 字面量；Buffer 分支在 json 分支之前 return，原样透传。
-        const data = isPost ? Buffer.from(this.renderTemplate(this.WEBHOOK_BODY_TEMPLATE, title, desp, option), 'utf-8') : undefined
+        // GET 时必须显式传 null：undefined 会被公共 ajax 解构默认为 {}，经 axios 变成 body "{}"；
+        // null 会原样透传，axios 对 null 不写请求体（ajax 类型不含 null，此处需断言）
+        const data = isPost ? Buffer.from(this.renderTemplate(this.WEBHOOK_BODY_TEMPLATE, title, desp, option), 'utf-8') : null as any
         return ajax({
             url: this.WEBHOOK_URL,
             method: this.WEBHOOK_METHOD,
