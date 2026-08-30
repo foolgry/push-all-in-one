@@ -79,7 +79,7 @@ npm i push-all-in-one -S
 调用方式举例：
 
 ```ts
-import { ServerChanTurbo, ServerChanV3, CustomEmail, Dingtalk, WechatRobot, WechatApp, PushPlus, WxPusher, IGot, Qmsg, XiZhi, PushDeer, Discord, OneBot, Telegram, Feishu, Ntfy, runPushAllInOne, runPushAllInCloud } from 'push-all-in-one'
+import { ServerChanTurbo, ServerChanV3, CustomEmail, Dingtalk, WechatRobot, WechatApp, PushPlus, WxPusher, IGot, Qmsg, XiZhi, PushDeer, Discord, OneBot, Telegram, Feishu, Ntfy, Bark, Webhook, runPushAllInOne, runPushAllInCloud } from 'push-all-in-one'
 
 // 通过 runPushAllInOne 统一调用
 runPushAllInOne('测试推送', '测试推送', {
@@ -254,6 +254,32 @@ const ntfy = new Ntfy({
     NTFY_TOPIC: 'push_all_in_one_test',
 })
 await ntfy.send('Ntfy - 标题支持中文', '你好，我很可爱 - Ntfy', {
+})
+
+// 【推荐】Bark 推送（iOS）。官方文档：https://bark.day.app/
+// 在 Bark App 中获取设备 Key；支持自建 bark-server，服务器地址默认为 https://api.day.app
+const bark = new Bark({
+    BARK_DEVICE_KEY: 'xxxxxxxxxxxxxxxxxx',
+    // BARK_SERVER_URL: 'https://bark.example.com', // 自建服务端地址，可选
+})
+bark.send('你好', '你好，我很可爱 - Bark', {
+    group: 'push-all-in-one', // 通知分组，同一分组的通知可折叠，可选
+    url: 'https://github.com/CaoMeiYouRen/push-all-in-one', // 点击通知跳转的链接，可选
+    sound: 'minuet', // 通知铃声，可选
+    level: 'timeSensitive', // 通知级别：active=默认，timeSensitive=时效性，passive=被动，critical=重要，可选
+})
+
+// 通用 Webhook 推送。通过 URL + 请求方法 + 请求头 + 请求体模板对接任意推送服务
+// 模板支持占位符 {{title}} {{body}} {{url}} {{task}}；默认 Content-Type 为 text/plain，GET 请求会忽略模板，参数请自行拼接在 URL 中
+const webhook = new Webhook({
+    WEBHOOK_URL: 'https://example.com/hook',
+    WEBHOOK_METHOD: 'POST', // 默认为 POST，可选
+    WEBHOOK_HEADERS: '{"Authorization": "Bearer xxx"}', // 请求头，JSON 字符串，可选
+    WEBHOOK_BODY_TEMPLATE: '{"msg": "{{title}}\n{{body}}"}', // 请求体模板，默认为 "{{title}}\n{{body}}"，可选
+})
+webhook.send('你好', '你好，我很可爱 - Webhook', {
+    url: 'https://example.com/task/1', // 占位符 {{url}}，可选
+    task: '每日备份', // 占位符 {{task}}，可选
 })
 
 // WxPusher 推送。官方文档：https://wxpusher.zjiecode.com/docs

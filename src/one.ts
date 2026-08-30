@@ -1,8 +1,9 @@
 import { ajax } from './utils/ajax'
-import { CustomEmail, Dingtalk, Discord, Feishu, IGot, Ntfy, OneBot, PushDeer, PushPlus, Qmsg, ServerChanTurbo, ServerChanV3, Telegram, WechatApp, WechatRobot, XiZhi, WxPusher } from './index'
+import { Bark, CustomEmail, Dingtalk, Discord, Feishu, IGot, Ntfy, OneBot, PushDeer, PushPlus, Qmsg, ServerChanTurbo, ServerChanV3, Telegram, WechatApp, Webhook, WechatRobot, XiZhi, WxPusher } from './index'
 import { SendResponse } from '@/interfaces/response'
 
 export const PushAllInOne = {
+    Bark,
     CustomEmail,
     Dingtalk,
     Discord,
@@ -17,6 +18,7 @@ export const PushAllInOne = {
     ServerChanV3,
     Telegram,
     WechatApp,
+    Webhook,
     WechatRobot,
     WxPusher,
     XiZhi,

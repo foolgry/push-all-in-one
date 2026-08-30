@@ -4,8 +4,9 @@ vi.mock('@/utils/ajax', () => ({
     ajax: vi.fn(),
 }))
 
-import { Bark } from './bark'
+import { Bark, BarkOption } from './bark'
 import { ajax } from '@/utils/ajax'
+import { validate } from '@/utils/validate'
 
 const mockedAjax = vi.mocked(ajax)
 
@@ -77,5 +78,13 @@ describe('Bark', () => {
             title: '只有标题',
             body: '',
         })
+    })
+
+    it('should reject invalid level by option schema enum', () => {
+        // level 为联合类型枚举，schema 校验为 select，非法值应抛错，合法值应通过
+        const invalidOption = { level: 'nope' } as unknown as BarkOption
+        expect(() => validate(invalidOption, Bark.optionSchema)).toThrow('"level" 字段必须是以下选项之一')
+        const validOption: BarkOption = { level: 'timeSensitive' }
+        expect(() => validate(validOption, Bark.optionSchema)).not.toThrow()
     })
 })

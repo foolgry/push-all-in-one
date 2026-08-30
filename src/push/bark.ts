@@ -37,6 +37,8 @@ export const barkConfigSchema: BarkConfigSchema = {
     },
 } as const
 
+export type BarkLevel = 'active' | 'timeSensitive' | 'passive' | 'critical'
+
 export interface BarkOption {
     /**
      * 点击通知跳转的 URL
@@ -61,7 +63,7 @@ export interface BarkOption {
     /**
      * 通知级别。active=默认，timeSensitive=时效性，passive=被动，critical=重要
      */
-    level?: string
+    level?: BarkLevel
 
     /**
      * 加密推送的密文（Bark 端到端加密）。传入后 body 将仅包含该密文，由 App 端解密
@@ -69,13 +71,82 @@ export interface BarkOption {
     ciphertext?: string
 
     /**
+     * Bark 端到端加密时与 ciphertext 配套传入的初始向量。随机 iv 必须随密文一起传给服务端，App 端才能解密。
+     * 不加入 optionSchema：避免配置生成器诱导手动填写，该值应随加密过程一起生成
+     */
+    iv?: string
+
+    /**
      * 其他 Bark 支持的参数，原样透传给 bark-server
      */
     [key: string]: unknown
 }
 
-export type BarkOptionSchema = OptionSchema<BarkOption>
-export const barkOptionSchema: BarkOptionSchema = {} as const
+// BarkOption 含 [key: string]: unknown 索引签名，直接作为 OptionSchema 的泛型会把索引签名也映射进 schema
+// （unknown 回落为 select），导致 string 型条目类型冲突，因此基于去除索引签名后的具名属性子集定义
+export type BarkOptionSchema = OptionSchema<Pick<BarkOption, 'url' | 'group' | 'sound' | 'icon' | 'level' | 'ciphertext'>>
+export const barkOptionSchema: BarkOptionSchema = {
+    url: {
+        type: 'string',
+        title: '点击通知跳转的 URL',
+        description: '点击通知跳转的 URL',
+        required: false,
+        default: '',
+    },
+    group: {
+        type: 'string',
+        title: '通知分组',
+        description: '同一分组的通知可折叠',
+        required: false,
+        default: '',
+    },
+    sound: {
+        type: 'string',
+        title: '通知铃声',
+        description: '参考 https://github.com/Finb/bark-server/tree/master/deploy',
+        required: false,
+        default: '',
+    },
+    icon: {
+        type: 'string',
+        title: '通知图标 URL',
+        description: '通知图标 URL',
+        required: false,
+        default: '',
+    },
+    level: {
+        type: 'select',
+        title: '通知级别',
+        description: 'active=默认，timeSensitive=时效性，passive=被动，critical=重要',
+        required: false,
+        default: 'active',
+        options: [
+            {
+                label: '默认',
+                value: 'active',
+            },
+            {
+                label: '时效性',
+                value: 'timeSensitive',
+            },
+            {
+                label: '被动',
+                value: 'passive',
+            },
+            {
+                label: '重要',
+                value: 'critical',
+            },
+        ],
+    },
+    ciphertext: {
+        type: 'string',
+        title: '加密推送的密文',
+        description: 'Bark 端到端加密。传入后 body 将仅包含该密文，由 App 端解密',
+        required: false,
+        default: '',
+    },
+} as const
 
 export interface BarkResponse {
     /**
